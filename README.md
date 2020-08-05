@@ -9,7 +9,7 @@ A simple, complete, `const`-everything, saturating, human-friendly, `#![no_std]`
 Rust library for byte units.
 
 ```rust
-use ubyte::{ByteUnit, ToByteUnit};}}
+use ubyte::{ByteUnit, ToByteUnit};
 
 // Constructors and associated units for all SI units up to exbibyte.
 let half_mb = 500.kilobytes();
