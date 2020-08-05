@@ -9,7 +9,7 @@ A simple, complete, const-everything, saturating, human-friendly, no_std library
 documentation = "https://docs.rs/ubyte/0.9"
 repository = "https://github.com/SergioBenitez/ubyte"
 readme = "README.md"
-keywords = ["byte", "bytes", "units", "conversion", "integer", "human"]
+keywords = ["byte", "human", "units", "conversion", "integer"]
 license = "MIT OR Apache-2.0"
 categories = ["value-formatting", "encoding", "no-std"]
 
