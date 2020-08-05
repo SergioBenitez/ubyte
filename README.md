@@ -45,6 +45,14 @@ Add the following to your `Cargo.toml`:
 ubyte = "0.9"
 ```
 
+For `serde` (de)serialization support, enable the `serde` feature, which is
+disabled by default:
+
+```toml
+[dependencies]
+ubyte = { version = "0.9", features = ["serde"] }
+```
+
 # License
 
 `ubyte` is licensed under either of the following, at your option:

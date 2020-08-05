@@ -13,4 +13,11 @@ keywords = ["byte", "human", "units", "conversion", "integer"]
 license = "MIT OR Apache-2.0"
 categories = ["value-formatting", "encoding", "no-std"]
 
+[features]
+default = []
+
 [dependencies]
+serde = { version = "1.0", default-features = false, optional = true }
+
+[dev-dependencies]
+serde_test = "1.0"

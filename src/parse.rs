@@ -94,7 +94,7 @@ mod parse_tests {
         assert_reject!["?mb", "1.2mb.", ".2mb", "99k", "99bk", "1 k b"];
         assert_reject!["1.2mkb", "1kb2", "1MB ", " 1MB"];
         assert_reject!["287423890740938348498349344"];
-        assert_reject!["1.2mkb", "1kb2", "1MB ", " 1MB"];
+        assert_reject!["1.kb", "1.", "1. ", "2. kb"];
     }
 
     #[test]

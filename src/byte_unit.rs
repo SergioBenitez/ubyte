@@ -1,5 +1,7 @@
 /// A unit of bytes with saturating `const` constructors and arithmetic.
 ///
+/// # Overview
+///
 /// A `ByteUnit` represents a unit, a count, a number, of bytes. All operations
 /// on a `ByteUnit` -- constructors, arithmetic, conversions -- saturate.
 /// Overflow, underflow, and divide-by-zero are impossible. See the [top-level
@@ -7,6 +9,46 @@
 ///
 /// [`ToByteUnit`] provides human-friendly methods on all integer types for
 /// converting into a `ByteUnit`: [`512.megabytes()`](ToByteUnit::megabytes).
+///
+/// # Parsing
+///
+/// `ByteUnit` implements `FromStr` for parsing byte unit strings into a
+/// `ByteUnit`. The grammar accepted by the parser is:
+///
+/// ```ebnf
+/// byte_unit := uint+ ('.' uint+)? WHITESPACE* suffix
+///
+/// uint := '0'..'9'
+/// suffix := case insensitive SI byte unit suffix ('b' to 'eib')
+/// WHITESPACE := the ' ' character
+/// ```
+///
+/// ```rust
+/// use ubyte::{ByteUnit, ToByteUnit};
+///
+/// let one_gib: ByteUnit = "1GiB".parse().unwrap();
+/// assert_eq!(one_gib, 1.gibibytes());
+///
+/// let quarter_mb: ByteUnit = "256 kB".parse().unwrap();
+/// assert_eq!(quarter_mb, 256.kilobytes());
+///
+/// let half_mb: ByteUnit = "0.5MB".parse().unwrap();
+/// assert_eq!(half_mb, 500.kilobytes());
+///
+/// let half_mib: ByteUnit = "0.500 mib".parse().unwrap();
+/// assert_eq!(half_mib, 512.kibibytes());
+///
+/// let some_mb: ByteUnit = "20.5MB".parse().unwrap();
+/// assert_eq!(some_mb, 20.megabytes() + 500.kilobytes());
+/// ```
+///
+/// # (De)serialization
+///
+/// With the `serde` feaure enabled (disabled by default), `ByteUnit` implements
+/// [`Deserialize`](#impl-Deserialize<%27de>) from strings, using the same
+/// grammar as the `FromStr` implementation, defined above, as well as all
+/// integer types. The [`Serialize`](struct.ByteUnit.html#impl-Serialize)
+/// implementation serializes into a `u64`.
 ///
 /// # Example
 ///
