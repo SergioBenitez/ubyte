@@ -11,7 +11,7 @@
 //! let half_mb = ByteUnit::Kilobyte(500);
 //! let half_mb = 500 * ByteUnit::kB;
 //!
-//! // All arithmetic and conversions are saturating.
+//! // All arithmetic operations and conversions saturate.
 //! let exbibyte_too_large_a = 1024 * ByteUnit::EiB;
 //! let exbibyte_too_large_b = ByteUnit::Exbibyte(1024);
 //! let exbibyte_too_large_c = 1024.exbibytes();
@@ -41,12 +41,17 @@
 //! converting into a `ByteUnit`: [`512.kilobytes()`](ToByteUnit::kilobytes).
 //!
 //! The [`Display`](struct.ByteUnit.html#impl-Display) implementation displays
-//! `ByteUnit`s in a human-friendly, customizable format.
+//! `ByteUnit`s in a human-friendly format. For truly custom printing,
+//! [`ByteUnit::repr()`] splits a value into its minimal components.
+//!
+//! The [`FromStr`](struct.ByteUnit.html#impl-FromStr) implementation parses
+//! byte units in a case-free manner: `1B` or `1b` or `1 b` => `1.bytes()`.
 //!
 //! All operations -- constructors, arithmetic, conversions -- saturate.
 //! Overflow, underflow, and divide-by-zero are impossible.
 
 mod arithmetic;
 mod byte_unit;
+mod parse;
 
 pub use byte_unit::{ByteUnit, ToByteUnit};

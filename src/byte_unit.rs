@@ -3,7 +3,7 @@
 /// A `ByteUnit` represents a unit, a count, a number, of bytes. All operations
 /// on a `ByteUnit` -- constructors, arithmetic, conversions -- saturate.
 /// Overflow, underflow, and divide-by-zero are impossible. See the [top-level
-/// documentation](crate) for more.
+/// documentation](./index.html) for more.
 ///
 /// [`ToByteUnit`] provides human-friendly methods on all integer types for
 /// converting into a `ByteUnit`: [`512.megabytes()`](ToByteUnit::megabytes).
@@ -22,7 +22,7 @@
 /// let half_gb = 500.megabytes();
 /// let half_gib = 512.mebibytes();
 ///
-/// // All arithmetic and conversions saturate.
+/// // All arithmetic operations and conversions saturate.
 /// let exbibyte = ByteUnit::Exbibyte(1);
 /// let exbibyte_too_large_a = 1024 * ByteUnit::EiB;
 /// let exbibyte_too_large_b = ByteUnit::Exbibyte(1024);
@@ -40,6 +40,29 @@
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone, Eq, Hash, Ord)]
 pub struct ByteUnit(pub(crate) u64);
+
+macro_rules! rem_and_suffix {
+    ($n:expr => $(($isuffix:ident, $suffix:ident)),+ $or_else:ident) => {
+        loop {
+            $(
+                let i_val = ByteUnit::$isuffix.as_u64();
+                let s_val = ByteUnit::$suffix.as_u64();
+
+                if $n >= s_val {
+                    let (u_val, unit, string) = if $n % s_val >= i_val - s_val {
+                        (i_val, ByteUnit::$isuffix, stringify!($isuffix))
+                    } else {
+                        (s_val, ByteUnit::$suffix, stringify!($suffix))
+                    };
+
+                    break ($n / u_val, ($n % u_val) as f64 / u_val as f64, string, unit)
+                }
+            )+
+
+            break ($n, 0f64, stringify!($or_else), ByteUnit::$or_else)
+        }
+    };
+}
 
 macro_rules! const_if {
     ($cond:expr, $on_true:expr, $on_false:expr) => (
@@ -152,6 +175,45 @@ impl ByteUnit {
     /// ```
     pub const fn as_u128(self) -> u128 {
         self.0 as u128
+    }
+
+    /// Returns the components of the minimal unit representation of `self`.
+    ///
+    /// The "minimal unit representation" is the representation that maximizes
+    /// the SI-unit while minimizing the whole part of the value. For example,
+    /// `1024.bytes()` is minimally represented by `1KiB`, while `1023.bytes()`
+    /// is minimally represented by `1.023kB`.
+    ///
+    /// The four components returned, in tuple-order, are:
+    ///   * `whole` - the whole part of the minimal representation.
+    ///   * `frac` - the fractional part of the minimal representation.
+    ///   * `suffix` - the suffix of the minimal representation.
+    ///   * `unit` - the `1`-unit of the minimal representation.
+    ///
+    /// Succinctly, this is: `(whole, frac, suffix, unit)`. Observe that `(whole
+    /// + frac) * unit` reconstructs the original value.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ubyte::{ByteUnit, ToByteUnit};
+    ///
+    /// let value = 2.mebibytes() + 512.kibibytes();
+    /// assert_eq!(value.to_string(), "2.50MiB");
+    ///
+    /// let (whole, frac, suffix, unit) = value.repr();
+    /// assert_eq!(whole, 2);
+    /// assert_eq!(frac, 0.5);
+    /// assert_eq!(suffix, "MiB");
+    /// assert_eq!(unit, ByteUnit::MiB);
+    ///
+    /// let reconstructed = (whole as f64 + frac) * unit.as_u64() as f64;
+    /// assert_eq!(reconstructed as u64, value);
+    /// ```
+    pub fn repr(self) -> (u64, f64, &'static str, ByteUnit) {
+        rem_and_suffix! { self.as_u64() =>
+            (EiB, EB), (TiB, TB), (GiB, GB), (MiB, MB), (KiB, kB) B
+        }
     }
 }
 
@@ -303,35 +365,13 @@ pub trait ToByteUnit: Into<ByteUnit> {
 
 impl<T: Into<ByteUnit> + Copy> ToByteUnit for T {}
 
-macro_rules! rem_and_suffix {
-    ($n:expr => $(($isuffix:ident, $suffix:ident)),+ $or_else:ident) => {
-        loop {
-            $(
-                let i_val = ByteUnit::$isuffix.as_u64();
-                let s_val = ByteUnit::$suffix.as_u64();
-
-                if $n >= s_val {
-                    let (unit, string) = if $n % s_val >= i_val - s_val {
-                        (i_val, stringify!($isuffix))
-                    } else {
-                        (s_val, stringify!($suffix))
-                    };
-
-                    break ($n / unit, ($n % unit) as f64 / unit as f64, string, unit)
-                }
-            )+
-
-            break ($n, 0f64, stringify!($or_else), ByteUnit::$or_else.as_u64())
-        }
-    };
-}
-
-/// Display `self` as best as possible.
+/// Display `self` as best as possible. For perfectly custom display output,
+/// consider using [`ByteUnit::repr()`].
 ///
 /// # Example
 ///
 /// ```rust
-/// # use ubyte::{ByteUnit, ToByteUnit};
+/// use ubyte::{ByteUnit, ToByteUnit};
 ///
 /// assert_eq!(323.kilobytes().to_string(), "323kB");
 /// assert_eq!(3.megabytes().to_string(), "3MB");
@@ -359,11 +399,7 @@ macro_rules! rem_and_suffix {
 /// ```
 impl core::fmt::Display for ByteUnit {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        let n = self.0;
-        let (whole, rem, suffix, unit) = rem_and_suffix! { n =>
-            (EiB, EB), (TiB, TB), (GiB, GB), (MiB, MB), (KiB, kB) B
-        };
-
+        let (whole, rem, suffix, unit) = self.repr();
         let width = f.width().unwrap_or(0);
         if rem != 0f64 && f.precision().map(|p| p > 0).unwrap_or(true) {
             let p = f.precision().unwrap_or(2);
@@ -371,7 +407,7 @@ impl core::fmt::Display for ByteUnit {
             write!(f, "{:0width$}.{:0p$.0}{}", whole, rem * k, suffix,
                 p = p, width = width)
         } else if rem > 0.5f64 {
-            ((whole + 1) * unit).bytes().fmt(f)
+            ((whole.bytes() + 1) * unit).fmt(f)
         } else {
             write!(f, "{:0width$}{}", whole, suffix, width = width)
         }
