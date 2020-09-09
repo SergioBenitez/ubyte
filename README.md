@@ -50,7 +50,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ubyte = "0.9"
+ubyte = "0.10"
 ```
 
 For `serde` (de)serialization support, enable the `serde` feature, which is
@@ -58,7 +58,7 @@ disabled by default:
 
 ```toml
 [dependencies]
-ubyte = { version = "0.9", features = ["serde"] }
+ubyte = { version = "0.10", features = ["serde"] }
 ```
 
 # License
