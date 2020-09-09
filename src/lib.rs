@@ -27,6 +27,16 @@
 //! assert_eq!(format!("{:.3}", 7.gibibytes() + 920.mebibytes()), "7.898GiB");
 //! assert_eq!(format!("{:04.2}", 999.kilobytes() + 990.bytes()), "0976.55KiB");
 //! assert_eq!(format!("{:02.0}", 999.kilobytes() + 990.bytes()), "01MB");
+//!
+//! // Parsing is intuitive. Explicit `ByteUnit` is typically unnecessary.
+//! assert_eq!("10 KiB".parse::<ByteUnit>().unwrap(), 10.kibibytes());
+//! assert_eq!("10 kb".parse::<ByteUnit>().unwrap(), 10.kilobytes());
+//! assert_eq!("512Kb".parse::<ByteUnit>().unwrap(), 512.kilobytes());
+//! assert_eq!("99kb".parse::<ByteUnit>().unwrap(), 99.kilobytes());
+//! assert_eq!("1 MiB".parse::<ByteUnit>().unwrap(), 1.mebibytes());
+//! assert_eq!("1.5 MiB".parse::<ByteUnit>().unwrap(), 1.mebibytes() + 512.kibibytes());
+//! assert_eq!("0.2MB".parse::<ByteUnit>().unwrap(), 200.kilobytes());
+//! assert_eq!("7.25 gb".parse::<ByteUnit>().unwrap(), 7.gigabytes() + 250.megabytes());
 //! ```
 //!
 //! # Overview
@@ -54,8 +64,8 @@
 //! from strings and all integer types as well as
 //! [`Serialize`](struct.ByteUnit.html#impl-Serialize) into a `u64`.
 //!
-//! * All operations -- constructors, arithmetic, conversions -- saturate.
-//! Overflow, underflow, and divide-by-zero are impossible.
+//! * All operations -- constructors, arithmetic -- saturate. Overflow,
+//! underflow, divide-by-zero, and mod-by-zero are impossible.
 
 mod arithmetic;
 mod byte_unit;
@@ -64,3 +74,4 @@ mod parse;
 mod ser_de;
 
 pub use byte_unit::{ByteUnit, ToByteUnit};
+pub use parse::Error;

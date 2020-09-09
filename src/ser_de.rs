@@ -68,6 +68,11 @@ mod serde_tests {
         assert_de_tokens(&half_mib, &[Token::I32(524288)]);
         assert_de_tokens(&half_mib, &[Token::I64(524288)]);
 
+        let one_mib = ByteUnit::Mebibyte(1);
+        assert_de_tokens(&one_mib, &[Token::Str("1 mib")]);
+        assert_de_tokens(&one_mib, &[Token::Str("1 MiB")]);
+        assert_de_tokens(&one_mib, &[Token::Str("1mib")]);
+
         let zero = ByteUnit::Byte(0);
         assert_de_tokens(&zero, &[Token::Str("0")]);
         assert_de_tokens(&zero, &[Token::Str("0 B")]);

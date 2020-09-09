@@ -32,6 +32,14 @@ assert_eq!(format!("{:.0}", 7.gibibytes() + 920.mebibytes()), "8GiB");
 assert_eq!(format!("{:.3}", 7.gibibytes() + 920.mebibytes()), "7.898GiB");
 assert_eq!(format!("{:04.2}", 999.kilobytes() + 990.bytes()), "0976.55KiB");
 assert_eq!(format!("{:02.0}", 999.kilobytes() + 990.bytes()), "01MB");
+
+// Parsing is intuitive.
+assert_eq!("10 KiB".parse().unwrap(), 10.kibibytes());
+assert_eq!("10kb".parse().unwrap(), 10.kilobytes());
+assert_eq!("512Kb".parse().unwrap(), 512.kilobytes());
+assert_eq!("0.2MB".parse().unwrap(), 200.kilobytes());
+assert_eq!("1.5 MiB".parse().unwrap(), 1.mebibytes() + 512.kibibytes());
+assert_eq!("7.25 gb".parse().unwrap(), 7.gigabytes() + 250.megabytes());
 ```
 
 See the [documentation](http://docs.rs/ubyte) for detailed usage information.

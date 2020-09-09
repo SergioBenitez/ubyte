@@ -18,10 +18,9 @@ impl<T: Into<ByteUnit>> Div<T> for ByteUnit {
     #[inline(always)]
     fn div(self, rhs: T) -> Self::Output {
         let value = rhs.into().0;
-        if value == 0 {
-            ByteUnit::max_value()
-        } else {
-            ByteUnit(self.0 / value)
+        match value {
+            0 => ByteUnit::max_value(),
+            _ => ByteUnit(self.0 / value)
         }
     }
 }
@@ -31,7 +30,11 @@ impl<T: Into<ByteUnit>> Rem<T> for ByteUnit {
 
     #[inline(always)]
     fn rem(self, rhs: T) -> Self::Output {
-        ByteUnit(self.0 % rhs.into().0)
+        let value = rhs.into().0;
+        match value {
+            0 => ByteUnit(0),
+            _ => ByteUnit(self.0 % value)
+        }
     }
 }
 
@@ -179,3 +182,21 @@ impl_arith_ops_on_core!(i16);
 impl_arith_ops_on_core!(i32);
 impl_arith_ops_on_core!(i64);
 impl_arith_ops_on_core!(i128);
+
+#[cfg(test)]
+mod tests {
+    use crate::ByteUnit;
+
+    #[test]
+    fn test_saturation() {
+        assert_eq!(ByteUnit::B * -1, 0);
+        assert_eq!(ByteUnit::B * -3, 0);
+        assert_eq!(ByteUnit::B / -3, ByteUnit::max_value());
+        assert_eq!(ByteUnit::B - 100, 0);
+        assert_eq!((100 * ByteUnit::B) % -10, 0);
+
+        // These are suprising, but ~correct. Should we document?
+        assert_eq!(ByteUnit::B + (-100i32), 1);
+        assert_eq!(-100 + ByteUnit::B, 1);
+    }
+}
