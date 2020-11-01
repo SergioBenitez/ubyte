@@ -95,7 +95,7 @@ macro_rules! impl_arith_ops_on_core {
 
             #[inline(always)]
             fn mul(self, rhs: ByteUnit) -> Self::Output {
-                rhs * self
+                ByteUnit::from(self) * rhs
             }
         }
 
@@ -104,7 +104,7 @@ macro_rules! impl_arith_ops_on_core {
 
             #[inline(always)]
             fn div(self, rhs: ByteUnit) -> Self::Output {
-                rhs / self
+                ByteUnit::from(self) / rhs
             }
         }
 
@@ -113,7 +113,7 @@ macro_rules! impl_arith_ops_on_core {
 
             #[inline(always)]
             fn rem(self, rhs: ByteUnit) -> Self::Output {
-                rhs % self
+                ByteUnit::from(self) % rhs
             }
         }
 
@@ -122,7 +122,7 @@ macro_rules! impl_arith_ops_on_core {
 
             #[inline(always)]
             fn add(self, rhs: ByteUnit) -> Self::Output {
-                rhs + self
+                ByteUnit::from(self) + rhs
             }
         }
 
@@ -131,7 +131,7 @@ macro_rules! impl_arith_ops_on_core {
 
             #[inline(always)]
             fn sub(self, rhs: ByteUnit) -> Self::Output {
-                rhs - self
+                ByteUnit::from(self) - rhs
             }
         }
 
@@ -140,7 +140,7 @@ macro_rules! impl_arith_ops_on_core {
 
             #[inline(always)]
             fn shr(self, rhs: ByteUnit) -> Self::Output {
-                rhs >> self
+                ByteUnit::from(self) >> rhs
             }
         }
 
@@ -149,21 +149,21 @@ macro_rules! impl_arith_ops_on_core {
 
             #[inline(always)]
             fn shl(self, rhs: ByteUnit) -> Self::Output {
-                rhs << self
+                ByteUnit::from(self) << rhs
             }
         }
 
         impl PartialEq<ByteUnit> for $T {
             #[inline(always)]
             fn eq(&self, other: &ByteUnit) -> bool {
-                other == self
+                ByteUnit::from(*self).eq(other)
             }
         }
 
         impl PartialOrd<ByteUnit> for $T {
             #[inline(always)]
             fn partial_cmp(&self, other: &ByteUnit) -> Option<Ordering> {
-                other.partial_cmp(self)
+                ByteUnit::from(*self).partial_cmp(other)
             }
         }
     )
@@ -185,7 +185,7 @@ impl_arith_ops_on_core!(i128);
 
 #[cfg(test)]
 mod tests {
-    use crate::ByteUnit;
+    use crate::{ByteUnit, ToByteUnit};
 
     #[test]
     fn test_saturation() {
@@ -198,5 +198,15 @@ mod tests {
         // These are suprising, but ~correct. Should we document?
         assert_eq!(ByteUnit::B + (-100i32), 1);
         assert_eq!(-100 + ByteUnit::B, 1);
+    }
+
+    #[test]
+    fn test_core_types_operations() {
+        assert_eq!(1000 - 300.bytes(), 700);
+        assert_eq!(1024 >> 2.bytes(), 256);
+        assert_eq!(2 << 2.bytes(), 8);
+        assert_eq!(2048 / 4.bytes(), 512);
+        assert!((500 + 700) < 2.mebibytes());
+        assert!((500 + 700) > 2.bytes());
     }
 }
