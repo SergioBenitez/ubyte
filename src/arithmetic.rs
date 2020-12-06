@@ -1,5 +1,5 @@
 use core::cmp::Ordering;
-use core::ops::{Mul, Add, Shl, Sub, Div, Shr, Rem};
+use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Shl, Shr, Sub, SubAssign};
 
 use crate::ByteUnit;
 
@@ -20,7 +20,7 @@ impl<T: Into<ByteUnit>> Div<T> for ByteUnit {
         let value = rhs.into().0;
         match value {
             0 => ByteUnit::max_value(),
-            _ => ByteUnit(self.0 / value)
+            _ => ByteUnit(self.0 / value),
         }
     }
 }
@@ -33,7 +33,7 @@ impl<T: Into<ByteUnit>> Rem<T> for ByteUnit {
         let value = rhs.into().0;
         match value {
             0 => ByteUnit(0),
-            _ => ByteUnit(self.0 % value)
+            _ => ByteUnit(self.0 % value),
         }
     }
 }
@@ -89,7 +89,7 @@ impl<T: Into<ByteUnit> + Copy> PartialOrd<T> for ByteUnit {
 }
 
 macro_rules! impl_arith_ops_on_core {
-    ($T:ty) => (
+    ($T:ty) => {
         impl Mul<ByteUnit> for $T {
             type Output = ByteUnit;
 
@@ -166,7 +166,7 @@ macro_rules! impl_arith_ops_on_core {
                 ByteUnit::from(*self).partial_cmp(other)
             }
         }
-    )
+    };
 }
 
 impl_arith_ops_on_core!(usize);
@@ -182,6 +182,35 @@ impl_arith_ops_on_core!(i16);
 impl_arith_ops_on_core!(i32);
 impl_arith_ops_on_core!(i64);
 impl_arith_ops_on_core!(i128);
+
+/// Assignment add / sub / mul / div
+impl AddAssign for ByteUnit {
+    #[inline(always)]
+    fn add_assign(&mut self, rhs: ByteUnit) {
+        self.0 += rhs.0;
+    }
+}
+
+impl SubAssign for ByteUnit {
+    #[inline(always)]
+    fn sub_assign(&mut self, rhs: ByteUnit) {
+        self.0 -= rhs.0;
+    }
+}
+
+impl MulAssign for ByteUnit {
+    #[inline(always)]
+    fn mul_assign(&mut self, rhs: ByteUnit) {
+        self.0 *= rhs.0;
+    }
+}
+
+impl DivAssign for ByteUnit {
+    #[inline(always)]
+    fn div_assign(&mut self, rhs: ByteUnit) {
+        self.0 /= rhs.0;
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -208,5 +237,21 @@ mod tests {
         assert_eq!(2048 / 4.bytes(), 512);
         assert!((500 + 700) < 2.mebibytes());
         assert!((500 + 700) > 2.bytes());
+
+        let mut ax = 300.bytes();
+        ax += 1.kilobytes();
+        assert!(ax == 1.kilobytes() + 300.bytes());
+
+        let mut sx = 1.kilobytes();
+        sx -= 300.bytes();
+        assert!(sx == 1.kilobytes() - 300.bytes());
+
+        let mut mx = 300.bytes();
+        mx *= 1.kilobytes();
+        assert!(mx == 1.kilobytes() * 300.bytes());
+
+        let mut dx = 300.megabytes();
+        dx /= 300.bytes();
+        assert!(dx == 300.megabytes() / 300.bytes());
     }
 }
