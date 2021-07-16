@@ -80,7 +80,7 @@
 /// assert_eq!(too_small, 0);
 /// ```
 #[repr(transparent)]
-#[derive(Debug, Copy, Clone, Eq, Hash, Ord)]
+#[derive(Debug, Copy, Clone, Eq, Hash, Ord, Default)]
 pub struct ByteUnit(pub(crate) u64);
 
 macro_rules! rem_and_suffix {
