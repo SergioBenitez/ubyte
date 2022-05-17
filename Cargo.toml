@@ -1,6 +1,6 @@
 [package]
 name = "ubyte"
-version = "0.10.1"
+version = "0.10.2"
 authors = ["Sergio Benitez <sb@sergio.bz>"]
 edition = "2018"
 description = """
