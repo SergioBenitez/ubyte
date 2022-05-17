@@ -80,7 +80,7 @@
 /// assert_eq!(too_small, 0);
 /// ```
 #[repr(transparent)]
-#[derive(Debug, Copy, Clone, Eq, Hash, Ord)]
+#[derive(Debug, Default, Copy, Clone, Eq, Hash, Ord)]
 pub struct ByteUnit(pub(crate) u64);
 
 macro_rules! rem_and_suffix {
@@ -108,7 +108,7 @@ macro_rules! rem_and_suffix {
 
 macro_rules! const_if {
     ($cond:expr, $on_true:expr, $on_false:expr) => (
-        [$on_false, $on_true][$cond as usize];
+        [$on_false, $on_true][$cond as usize]
     )
 }
 
