@@ -74,7 +74,7 @@ impl core::str::FromStr for ByteUnit {
                 let frac_str = &s[(i + 1)..num_end];
                 let whole: u64 = s[..i].parse().map_err(Error::BadWhole)?;
                 let frac: u32 = frac_str.parse().map_err(Error::BadFractional)?;
-                let frac_part = frac as f64 / 10u64.pow(frac_str.len() as u32) as f64;
+                let frac_part = frac as f64 / 10u64.saturating_pow(frac_str.len() as u32) as f64;
                 let frac_unit = (frac_part * unit.as_u64() as f64) as u64;
                 Ok(whole * unit + frac_unit)
             }
@@ -178,6 +178,11 @@ mod parse_tests {
 
             "01MB" => 1.megabytes(),
             "0001MiB" => 1.mebibytes(),
+        }
+
+        assert_parses! {
+            "9.00000000000000000000MB" => 9.megabytes(),
+            "9.000000000000000000000000000000MB" => 9.megabytes(),
         }
     }
 }

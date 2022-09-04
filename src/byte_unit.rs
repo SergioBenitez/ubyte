@@ -445,7 +445,7 @@ impl core::fmt::Display for ByteUnit {
         let width = f.width().unwrap_or(0);
         if rem != 0f64 && f.precision().map(|p| p > 0).unwrap_or(true) {
             let p = f.precision().unwrap_or(2);
-            let k = 10u64.pow(p as u32) as f64;
+            let k = 10u64.saturating_pow(p as u32) as f64;
             write!(f, "{:0width$}.{:0p$.0}{}", whole, rem * k, suffix,
                 p = p, width = width)
         } else if rem > 0.5f64 {
