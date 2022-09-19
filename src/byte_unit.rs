@@ -219,6 +219,22 @@ impl ByteUnit {
         self.0 as u128
     }
 
+    /// Returns the value of bytes represented by `self` as a `usize`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use ubyte::ByteUnit;
+    /// let int: usize = ByteUnit::Gigabyte(4).as_usize();
+    /// assert_eq!(int, 4 * ByteUnit::GB);
+    ///
+    /// assert_eq!(ByteUnit::Megabyte(42).as_usize(), 42 * 1_000_000);
+    /// assert_eq!(ByteUnit::Exbibyte(7).as_usize(), 7 * 1 << 60);
+    /// ```
+    pub const fn as_usize(self) -> usize {
+        self.0 as usize
+    }
+
     /// Returns the components of the minimal unit representation of `self`.
     ///
     /// The "minimal unit representation" is the representation that maximizes
