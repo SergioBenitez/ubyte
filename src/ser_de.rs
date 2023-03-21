@@ -7,7 +7,13 @@ impl<'de> Deserialize<'de> for ByteUnit {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: serde::Deserializer<'de>
     {
-        deserializer.deserialize_u64(Visitor)
+        if deserializer.is_human_readable() {
+            // to support json and others, visit any
+            deserializer.deserialize_any(Visitor)
+        } else {
+            // hint for more compact that we expect an u64
+            deserializer.deserialize_u64(Visitor)
+        }
     }
 }
 
@@ -53,12 +59,12 @@ impl Serialize for ByteUnit {
 
 #[cfg(test)]
 mod serde_tests {
-    use serde_test::{assert_de_tokens, assert_ser_tokens, Token};
+    use serde_test::{assert_de_tokens, assert_ser_tokens, Configure, Token};
     use crate::ByteUnit;
 
     #[test]
     fn test_de() {
-        let half_mib = ByteUnit::Kibibyte(512);
+        let half_mib = ByteUnit::Kibibyte(512).readable();
         assert_de_tokens(&half_mib, &[Token::Str("512 kib")]);
         assert_de_tokens(&half_mib, &[Token::Str("512 KiB")]);
         assert_de_tokens(&half_mib, &[Token::Str("512KiB")]);
@@ -68,12 +74,12 @@ mod serde_tests {
         assert_de_tokens(&half_mib, &[Token::I32(524288)]);
         assert_de_tokens(&half_mib, &[Token::I64(524288)]);
 
-        let one_mib = ByteUnit::Mebibyte(1);
+        let one_mib = ByteUnit::Mebibyte(1).readable();
         assert_de_tokens(&one_mib, &[Token::Str("1 mib")]);
         assert_de_tokens(&one_mib, &[Token::Str("1 MiB")]);
         assert_de_tokens(&one_mib, &[Token::Str("1mib")]);
 
-        let zero = ByteUnit::Byte(0);
+        let zero = ByteUnit::Byte(0).readable();
         assert_de_tokens(&zero, &[Token::Str("0")]);
         assert_de_tokens(&zero, &[Token::Str("0 B")]);
         assert_de_tokens(&zero, &[Token::U32(0)]);
@@ -83,14 +89,45 @@ mod serde_tests {
     }
 
     #[test]
-    fn test_ser() {
-        let half_mib = ByteUnit::Kibibyte(512);
+    fn test_de_compact() {
+        let half_mib = ByteUnit::Kibibyte(512).compact();
+        assert_de_tokens(&half_mib, &[Token::U32(524288)]);
+        assert_de_tokens(&half_mib, &[Token::U64(524288)]);
+        assert_de_tokens(&half_mib, &[Token::I32(524288)]);
+        assert_de_tokens(&half_mib, &[Token::I64(524288)]);
+
+        let one_mib = ByteUnit::Mebibyte(1).compact();
+        assert_de_tokens(&one_mib, &[Token::U32(1024 * 1024)]);
+
+        let zero = ByteUnit::Byte(0).compact();
+        assert_de_tokens(&zero, &[Token::U32(0)]);
+        assert_de_tokens(&zero, &[Token::U64(0)]);
+        assert_de_tokens(&zero, &[Token::I32(-34)]);
+        assert_de_tokens(&zero, &[Token::I64(-2483)]);
+    }
+
+    #[test]
+    fn test_ser_compact() {
+        let half_mib = ByteUnit::Kibibyte(512).compact();
         assert_ser_tokens(&half_mib, &[Token::U64(512 << 10)]);
 
-        let ten_bytes = ByteUnit::Byte(10);
+        let ten_bytes = ByteUnit::Byte(10).compact();
         assert_ser_tokens(&ten_bytes, &[Token::U64(10)]);
 
-        let zero = ByteUnit::Byte(0);
+        let zero = ByteUnit::Byte(0).compact();
+        assert_de_tokens(&zero, &[Token::U64(0)]);
+    }
+
+    #[test]
+    fn test_ser_readable() {
+        // readable serialization forms are the same as compact
+        let half_mib = ByteUnit::Kibibyte(512).readable();
+        assert_ser_tokens(&half_mib, &[Token::U64(512 << 10)]);
+
+        let ten_bytes = ByteUnit::Byte(10).readable();
+        assert_ser_tokens(&ten_bytes, &[Token::U64(10)]);
+
+        let zero = ByteUnit::Byte(0).readable();
         assert_de_tokens(&zero, &[Token::U64(0)]);
     }
 }
