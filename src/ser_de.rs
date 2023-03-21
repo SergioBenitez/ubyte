@@ -7,7 +7,13 @@ impl<'de> Deserialize<'de> for ByteUnit {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: serde::Deserializer<'de>
     {
-        deserializer.deserialize_u64(Visitor)
+        if deserializer.is_human_readable() {
+            // to support json and others, visit any
+            deserializer.deserialize_any(Visitor)
+        } else {
+            // hint for more compact that we expect an u64
+            deserializer.deserialize_u64(Visitor)
+        }
     }
 }
 
