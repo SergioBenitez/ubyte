@@ -117,4 +117,17 @@ mod serde_tests {
         let zero = ByteUnit::Byte(0).compact();
         assert_de_tokens(&zero, &[Token::U64(0)]);
     }
+
+    #[test]
+    fn test_ser_readable() {
+        // readable serialization forms are the same as compact
+        let half_mib = ByteUnit::Kibibyte(512).readable();
+        assert_ser_tokens(&half_mib, &[Token::U64(512 << 10)]);
+
+        let ten_bytes = ByteUnit::Byte(10).readable();
+        assert_ser_tokens(&ten_bytes, &[Token::U64(10)]);
+
+        let zero = ByteUnit::Byte(0).readable();
+        assert_de_tokens(&zero, &[Token::U64(0)]);
+    }
 }
