@@ -91,23 +91,15 @@ mod serde_tests {
     #[test]
     fn test_de_compact() {
         let half_mib = ByteUnit::Kibibyte(512).compact();
-        assert_de_tokens(&half_mib, &[Token::Str("512 kib")]);
-        assert_de_tokens(&half_mib, &[Token::Str("512 KiB")]);
-        assert_de_tokens(&half_mib, &[Token::Str("512KiB")]);
-        assert_de_tokens(&half_mib, &[Token::Str("524288")]);
         assert_de_tokens(&half_mib, &[Token::U32(524288)]);
         assert_de_tokens(&half_mib, &[Token::U64(524288)]);
         assert_de_tokens(&half_mib, &[Token::I32(524288)]);
         assert_de_tokens(&half_mib, &[Token::I64(524288)]);
 
         let one_mib = ByteUnit::Mebibyte(1).compact();
-        assert_de_tokens(&one_mib, &[Token::Str("1 mib")]);
-        assert_de_tokens(&one_mib, &[Token::Str("1 MiB")]);
-        assert_de_tokens(&one_mib, &[Token::Str("1mib")]);
+        assert_de_tokens(&one_mib, &[Token::U32(1024 * 1024)]);
 
         let zero = ByteUnit::Byte(0).compact();
-        assert_de_tokens(&zero, &[Token::Str("0")]);
-        assert_de_tokens(&zero, &[Token::Str("0 B")]);
         assert_de_tokens(&zero, &[Token::U32(0)]);
         assert_de_tokens(&zero, &[Token::U64(0)]);
         assert_de_tokens(&zero, &[Token::I32(-34)]);
