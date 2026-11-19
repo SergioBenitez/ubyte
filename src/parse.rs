@@ -40,6 +40,8 @@ pub enum Error {
     BadFractional(core::num::ParseIntError),
 }
 
+impl core::error::Error for Error {}
+
 impl core::str::FromStr for ByteUnit {
     type Err = Error;
 
